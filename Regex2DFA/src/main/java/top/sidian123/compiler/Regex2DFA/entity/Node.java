@@ -23,8 +23,10 @@ public class Node extends Element{
 
     /**
      * 指向node节点
+     * @param node 指向的节点
+     * @param input 边上的输入,应含一个字符
      */
-    public void pointNode(Node node,char input){
+    public void pointNode(Node node,String input){
         //判断是否存在node节点
         if(!isExist(node)){//不存在时
             //创建edge

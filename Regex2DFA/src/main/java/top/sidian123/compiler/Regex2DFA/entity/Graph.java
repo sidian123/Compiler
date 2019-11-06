@@ -15,10 +15,24 @@ public class Graph extends Element{
     public Graph(){
         this.setType(ElementType.GRAPH);
     }
+
+    public Graph(Node StartNode,Node endNode){
+        this();
+        startNodes.add(StartNode);
+        endNodes.add(endNode);
+    }
     /**
      * 开始节点
      */
     private List<Node> startNodes=new LinkedList<>();
+
+    public Node getFirstStartNode(){
+        return startNodes.get(0);
+    }
+
+    public Node getFirstEndNode(){
+        return endNodes.get(0);
+    }
 
     /**
      * 结束节点

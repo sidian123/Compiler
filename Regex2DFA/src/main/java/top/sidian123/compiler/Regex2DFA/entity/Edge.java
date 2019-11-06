@@ -15,7 +15,7 @@ public class Edge extends Element{
     /**
      * 输入字符
      */
-    private char input;
+    private String input;
 
     Edge(){
         this.setType(ElementType.EDGE);
