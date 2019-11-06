@@ -30,3 +30,19 @@ class Node{
         return this.sucNodes==null;
     }
 }
+
+/**
+ * 图
+ */
+class Graph{
+    /**
+     * 开始节点集合
+     * @type {Array}
+     */
+    startNodes=[];
+    /**
+     * 结束节点集合
+     * @type {Array}
+     */
+    endNodes=[];
+}
