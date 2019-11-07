@@ -1,6 +1,7 @@
 package top.sidian123.compiler.test;
 
 import lombok.extern.log4j.Log4j2;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import top.sidian123.compiler.Regex2DFA.NFA2DFA.NFA2DFA;
 import top.sidian123.compiler.Regex2DFA.Regex2NFA.Regex2NFA;
@@ -23,11 +24,16 @@ public class NFA2DFATest {
         NFA2DFA nfa2DFA=new NFA2DFA();
         //RE to NFA
         Graph graph = regex2NFA.parse(regex);
+        Assertions.assertEquals(10,graph.size());
         //label node for conveniently debug
         AtomicInteger i= new AtomicInteger();
         graph.traverse(node -> node.setMeta("n"+ i.getAndIncrement()));
         //NFA to DFA
         graph=nfa2DFA.translate(graph);
+        Assertions.assertEquals(4,graph.size());
+        //label node for conveniently debug
+        AtomicInteger j=new AtomicInteger();
+        graph.traverse(node -> node.setMeta("n"+ j.getAndIncrement()));
         log.info(graph);
     }
 }

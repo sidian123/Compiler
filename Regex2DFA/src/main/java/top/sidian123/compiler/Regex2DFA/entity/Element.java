@@ -17,7 +17,7 @@ public class Element {
     @Getter
     private String type;
     /**
-     * 元素类型相关的元数据
+     * 元素类型相关的元数据或计算时临时存放
      */
     @Setter
     @Getter

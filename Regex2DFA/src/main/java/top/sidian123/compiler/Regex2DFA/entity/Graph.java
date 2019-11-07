@@ -1,7 +1,5 @@
 package top.sidian123.compiler.Regex2DFA.entity;
 
-import lombok.AccessLevel;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,6 +7,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 /**
@@ -65,6 +64,15 @@ public class Graph extends Element{
     }
 
     /**
+     * 获取图中状态个数
+     */
+    public int size(){
+        AtomicInteger num= new AtomicInteger();
+        traverse(node -> num.getAndIncrement());
+        return num.get();
+    }
+
+    /**
      * 遍历图的所有节点
      * @param consumer 回调
      */
@@ -92,6 +100,16 @@ public class Graph extends Element{
             node.getEdges().forEach(edge -> {
                 _traverse(edge.getNextNode(),consumer,traversedNodeSet);
             });
+        }
+    }
+
+    /**
+     * 添加不重复的结束节点
+     * @param node 节点
+     */
+    public void addEndNode(Node node){
+        if(!endNodes.contains(node)){
+            endNodes.add(node);
         }
     }
 

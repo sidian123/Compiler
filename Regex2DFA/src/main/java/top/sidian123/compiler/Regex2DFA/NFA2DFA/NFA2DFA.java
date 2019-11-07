@@ -20,6 +20,7 @@ public class NFA2DFA {
 
     public Graph translate(@NonNull Graph source) {
         LinkedList<Set<Node>> workList=new LinkedList<>();//待处理的状态集合的集合
+        Set<Set<Node>> doneSet=new HashSet<>();//已处理过的状态集合的集合
         MapTable<Set<Node>,String,Set<Node>> mapTable=new MapTable<>();//状态集合与字符的映射规则
         //初始化
         this.nfaGraph = source;
@@ -30,14 +31,15 @@ public class NFA2DFA {
         //处理workList所有的状态集合
         Set<Node> stateSet=null;
         while((stateSet=workList.poll())!=null){
+            doneSet.add(stateSet);//标记该节点不再参与遍历
             for (String input : this.allInput) {
                 //映射
                 Set<Node> nextState = closure(delta(stateSet, input));
                 //记录映射规则
                 mapTable.add(stateSet,input,nextState);
                 //不重复地加入到workList中
-                if(!workList.contains(nextState) && nextState.size()!=0){//不存在, 且得到的状态集合不为空
-                    workList.add(stateSet);
+                if(!doneSet.contains(nextState) && nextState.size()!=0){//不存在, 且得到的状态集合不为空
+                    workList.add(nextState);
                 }
             }
         }
@@ -54,33 +56,42 @@ public class NFA2DFA {
     private Graph toGraph(MapTable<Set<Node>, String, Set<Node>> mapTable,Set<Node> initialSet,Node endNode) {
         Set<Set<Node>> doneSet=new HashSet<>();//已扫描过的状态集合
         LinkedList<Set<Node>> workList=new LinkedList<>();//工作集合
+        Map<Set<Node>,Node> stateMap=new HashMap<>();//状态集合与节点的映射关系
         //initial
         workList.add(initialSet);
         //traverse to construct graph
         Graph graph = new Graph();
-        Node node=new Node();
-        graph.getStartNodes().add(node);
         Set<Node> stateSet=null;
         while((stateSet=workList.poll())!=null){
+            doneSet.add(stateSet);//标记该节点不再参与遍历
+            //准备节点
+            Node node=stateMap.get(stateSet);
+            if(node==null){
+                node=new Node();
+                stateMap.put(stateSet,node);
+            }
             for (String input : this.allInput) {
                 Set<Node> valueSet=mapTable.get(stateSet,input);
                 if(valueSet.size()!=0){
-                    //连接到该节点上
-                    Node tempNode=new Node();
+                    //准备节点, 并连接
+                    Node tempNode=stateMap.get(valueSet);
+                    if(tempNode==null){
+                        tempNode=new Node();
+                        stateMap.put(valueSet,tempNode);
+                    }
                     node.pointNode(tempNode,input);
                     //不重复的添加到workList
-                    if(!workList.contains(valueSet) && !doneSet.contains(valueSet)){
+                    if(!doneSet.contains(valueSet)){
                         workList.add(valueSet);
                     }
-                    //标记该状态集合已被扫描
-                    doneSet.add(stateSet);
                     //判断该状态集合是否包含结束状态
                     if(valueSet.contains(endNode)){//有
-                        graph.getEndNodes().add(tempNode);
+                        graph.addEndNode(tempNode);
                     }
                 }
             }
         }
+        graph.getStartNodes().add(stateMap.get(initialSet));
         return graph;
     }
 
@@ -100,10 +111,9 @@ public class NFA2DFA {
     }
 
     /**
-     * 得到node的闭包状态
-     *
+     * 得到node的空闭包状态集合
      * @param node             待操作的节点
-     * @param traversedNodeSet 已遍历节点,防止循环
+     * @param traversedNodeSet 已遍历节点,防止无限循环
      */
     private Set<Node> _closure(Node node, Set<Node> traversedNodeSet) {
         HashSet<Node> resultSet = new HashSet<>();
