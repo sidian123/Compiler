@@ -20,4 +20,11 @@ public class Edge extends Element{
     Edge(){
         this.setType(ElementType.EDGE);
     }
+
+    @Override
+    public String toString() {
+        return "Edge{" +
+                "input='" + input + '\'' +
+                '}';
+    }
 }

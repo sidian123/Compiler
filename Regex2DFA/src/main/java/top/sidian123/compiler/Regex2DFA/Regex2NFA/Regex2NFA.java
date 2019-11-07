@@ -129,105 +129,95 @@ public class Regex2NFA {
             return null;
         }
         //遍历解析
-        int i=0;
-        Element curCharElement=source.get(i);//当前字符
-        Element rightOpElement=source.size()>i+1?source.get(i+1):null;//右操作符
-        Element leftOpElement=stack.peekFirst();//左操作符
-        while (true){
+        Element curCharElement=null;//当前元素
+        while ((curCharElement=source.poll())!=null){
             if(isOperand(curCharElement)){//操作数
+                Operator operator =null;
                 //从栈中取出左操作符
                 String leftOp="空";
-                Operator operator = (Operator) leftOpElement;//肯定是操作符或空
+                operator = (Operator) stack.peekFirst();//肯定是操作符或空
                 if(operator!=null){//存在操作符
                     leftOp=operator.op;
                 }
                 //获取右操作符
                 String rightOp="空";
-                if(rightOpElement!=null){//存在操作符
-                    rightOp=((Operator)rightOpElement).op;
+                operator=(Operator) source.peekFirst();
+                if(operator!=null){//存在操作符
+                    rightOp=((Operator)operator).op;
                 }
-                //执行命令
+                //判断使用何种操作
                 String command = getCommand(leftOp, rightOp);//获取命令
-                switch (command){
-                    case RuleType.ERROR:{
-                        throw new SyntaxErrorException("语法错误");
-                    }
-                    case RuleType.IN:{
-                        //入栈
-                        stack.push(curCharElement);
-                        //准备下一次循环
-                        i++;
-                        curCharElement=rightOpElement;
-                        rightOpElement=source.size()>i+1?source.get(i+1):null;
-                        leftOpElement=stack.peekFirst();
-                        break;
-                    }
-                    case RuleType.EXIT:{
-                        return (Graph) stack.pollFirst();
-                    }
-                    case RuleType.COMPUTE_RIGHT:{
-                        if(((Operator)rightOpElement).op.equals("*")){
-                            //闭包操作, 合并图
-                            Graph graph=closure((Graph) curCharElement);
-                            //压入栈
-                            leftOpElement=stack.peekFirst();
-                            stack.push(graph);
-                            //准备下一次循环
-                            curCharElement=graph;
-                            i++;
-                            rightOpElement=source.size()>i+1?source.get(i+1):null;
-                        }
-                        break;
-                    }
-                    case RuleType.COMPUTE:{
-                        //取出操作符
-                        operator = (Operator) stack.pollFirst();
-                        switch (operator.op){
-                            case "(":{//去除左右括号,并将操作数压入栈中
-                                leftOpElement=stack.peekFirst();
-                                stack.push(curCharElement);
-                                //准备下一次循环
-                                i++;
-                                rightOpElement=source.size()>i+1?source.get(i+1):null;
-                                break;
-                            }
-                            case "|":{
-                                //|操作, 合并图
-                                Graph graph=alternation((Graph) stack.pollFirst(),(Graph) source.get(i));
-                                //压入栈
-                                leftOpElement=stack.peekFirst();
-                                stack.push(graph);
-                                //准备下一轮循环
-                                curCharElement=graph;
-                                rightOpElement=source.size()>i+1?source.get(i+1):null;
-                                break;
-                            }
-                            case "":{
-                                //连接操作, 合并图
-                                Graph graph=concatenation((Graph) stack.pollFirst(),(Graph) source.get(i));
-                                //压入栈
-                                leftOpElement=stack.peekFirst();
-                                stack.push(graph);
-                                //准备下一轮操作
-                                curCharElement=graph;
-                                i++;
-                                rightOpElement=source.size()>i+1?source.get(i+1):null;
-                                break;
-                            }
-                        }
-                        break;
-                    }
+                Graph result = exec(command, (Graph) curCharElement);
+                if(result!=null){//结束
+                    return result;
                 }
             }else{//操作符
                 //入栈
-                stack.push(source.get(i));
-                //准备下一轮循环
-                i++;
-                curCharElement=rightOpElement;
-                rightOpElement=source.size()>i+1?source.get(i+1):null;
-                leftOpElement=stack.peekFirst();
+                stack.push(curCharElement);
             }
         }
+        return null;
+    }
+
+    /**
+     * 执行命令
+     * @param command 命令
+     * @param operand 操作数
+     * @return 图或null, 仅在EXIT时返回结果
+     */
+    private Graph exec(String command, Graph operand) {
+        switch (command){
+            case RuleType.ERROR:{
+                throw new SyntaxErrorException("语法错误");
+            }
+            case RuleType.IN:{
+                //入栈
+                stack.push(operand);
+                break;
+            }
+            case RuleType.EXIT:{
+                return operand;
+            }
+            case RuleType.COMPUTE_RIGHT:{
+                Operator operator = (Operator) source.poll();
+                if(operator.op.equals("*")){
+                    //闭包操作, 合并图
+                    Graph graph=closure(operand);
+                    //压入source
+                    source.push(graph);
+                }
+                break;
+            }
+            case RuleType.COMPUTE:{
+                //取出操作符
+                Operator operator = (Operator) stack.poll();
+                switch (operator.op){
+                    case "(":{
+                        //去除左右括号
+                        source.poll();
+                        //入source
+                        source.push(operand);
+                        break;
+                    }
+                    case "|":{
+                        //|操作, 合并图
+                        Graph graph=alternation((Graph) stack.poll(),operand);
+                        //压入source
+                        source.push(graph);
+                        break;
+                    }
+                    case "":{
+                        //连接操作, 合并图
+                        Graph graph=concatenation((Graph) stack.poll(),(Graph) operand);
+                        //压入source
+                        source.push(graph);
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+        return null;
     }
 
     /**

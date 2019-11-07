@@ -15,5 +15,7 @@ public class Regex2NFATest {
         Regex2NFA regex2NFA=new Regex2NFA();
         Graph graph = regex2NFA.parse("a(b|c)*");
         System.out.println(graph);
+        graph=regex2NFA.parse("ab|c(d*|ef)*g");
+        System.out.println(graph);
     }
 }

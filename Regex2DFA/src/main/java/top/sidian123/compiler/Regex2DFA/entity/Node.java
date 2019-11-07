@@ -40,4 +40,11 @@ public class Node extends Element{
     public boolean isExist(Node node){
         return edges.stream().anyMatch(edge -> edge.getNextNode().equals(node));
     }
+
+    @Override
+    public String toString() {
+        return "Node{" +
+                "edges=" + edges +
+                '}';
+    }
 }
