@@ -107,7 +107,9 @@ public class Regex2NFA {
         Node node = new Node();
         Node node1 = new Node();
         node.pointNode(node1,String.valueOf(c));
-        this.source.add(new Graph(node,node1));
+        Graph graph = new Graph(node, node1);
+        graph.setMeta(String.valueOf(c));
+        this.source.add(graph);
     }
 
     private void addOperator(String op){
@@ -147,6 +149,7 @@ public class Regex2NFA {
                 }
                 //判断使用何种操作
                 String command = getCommand(leftOp, rightOp);//获取命令
+                log.info(String.format("当前操作数:%s 左操作符:%s 右操作符:%s 执行操作:%s", curCharElement,leftOp,rightOp,command));
                 Graph result = exec(command, (Graph) curCharElement);
                 if(result!=null){//结束
                     return result;
@@ -184,6 +187,7 @@ public class Regex2NFA {
                     //闭包操作, 合并图
                     Graph graph=closure(operand);
                     //压入source
+                    graph.setMeta(operand.getMeta()+"*");
                     source.push(graph);
                 }
                 break;
@@ -196,20 +200,25 @@ public class Regex2NFA {
                         //去除左右括号
                         source.poll();
                         //入source
+                        operand.setMeta("("+operand.getMeta()+")");
                         source.push(operand);
                         break;
                     }
                     case "|":{
                         //|操作, 合并图
-                        Graph graph=alternation((Graph) stack.poll(),operand);
+                        Graph leftOperand=(Graph) stack.poll();
+                        Graph graph=alternation(leftOperand,operand);
                         //压入source
+                        graph.setMeta(leftOperand.getMeta()+"|"+operand.getMeta());
                         source.push(graph);
                         break;
                     }
                     case "":{
                         //连接操作, 合并图
-                        Graph graph=concatenation((Graph) stack.poll(),(Graph) operand);
+                        Graph leftOperand=(Graph) stack.poll();
+                        Graph graph=concatenation(leftOperand,(Graph) operand);
                         //压入source
+                        graph.setMeta(leftOperand.getMeta()+""+operand.getMeta());
                         source.push(graph);
                         break;
                     }

@@ -38,4 +38,13 @@ public class Graph extends Element{
      * 结束节点
      */
     private List<Node> endNodes=new LinkedList<>();
+
+    @Override
+    public String toString() {
+        return "Graph{" +
+                "meta="+getMeta()+
+                ", startNodes=" + startNodes +
+                ", endNodes=" + endNodes +
+                '}';
+    }
 }
