@@ -1,20 +1,23 @@
 package top.sidian123.compiler.Regex2DFA.entity;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * 状态图的节点
  * @author Sidian.Luo
  * @date 2019/11/6 13:17
  */
-@Data
 public class Node extends Element{
     /**
      * 后继分支
      */
+    @Setter
+    @Getter
     private List<Edge> edges=new LinkedList<>();
 
     public Node() {
@@ -37,6 +40,21 @@ public class Node extends Element{
         }
     }
 
+    /**
+     * 输入字符c,得到下一状态集合
+     * @param c 字符
+     * @return 下一状态集合
+     */
+    public Set<Node> map(String c){
+        Set<Node> set=new HashSet<>();
+        for (Edge edge : this.getEdges()) {
+            if(edge.getInput().equals(c)){//找到下一状态
+                set.add(edge.getNextNode());
+            }
+        }
+        return set;
+    }
+
     public boolean isExist(Node node){
         return edges.stream().anyMatch(edge -> edge.getNextNode().equals(node));
     }
@@ -44,6 +62,7 @@ public class Node extends Element{
     @Override
     public String toString() {
         return "Node{" +
+                "meta="+getMeta()+ " "+
                 "edges=" + edges +
                 '}';
     }
